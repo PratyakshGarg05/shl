@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHL</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green-dark: #1e3a0f;
+    --green-mid:  #2d5016;
+    --green-light:#4a7c25;
+    --bg:         #e8e4db;
+    --card-bg:    #ede9e0;
+    --border:     #ccc9be;
+    --dot-unvisited: #3a3d4a;
+    --dot-visited:   #3a3d4a;
+    --dot-answered:  #1e3a0f;
+    --dot-active-bg: #fff;
+    --dot-active-border: #1e3a0f;
+  }
+
+  html, body { height:100%; width:100%; background:var(--bg); font-family:'Inter',sans-serif; color:#1a1a1a; overflow:hidden; }
+
+  /* ══════════════════════════════
+     BROWSER NAVBAR (top chrome)
+  ══════════════════════════════ */
+  .browser-nav {
+    height: 45px;
+    background: #c8c4bc;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 10px;
+    border-bottom: 1px solid #aaa;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 300;
+  }
+
+  .nav-arrows {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .nav-icon {
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #555;
+    font-size: 15px;
+    transition: background 0.1s;
+    border: none;
+    background: transparent;
+  }
+  .nav-icon:hover { background: rgba(0,0,0,0.1); }
+  .nav-icon svg { width:14px; height:14px; stroke:#555; fill:none; stroke-width:2; }
+
+  .nav-info-btn {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid #777;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    color: #555;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .nav-translate-btn {
+    width: 28px; height: 20px;
+    border: 1.5px solid #777;
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    font-size: 9px;
+    font-weight: 700;
+    color: #555;
+    letter-spacing: -0.5px;
+  }
+
+  /* ══════════════════════════════
+     SHL HEADER BAR
+  ══════════════════════════════ */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 52px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    position: fixed;
+    top: 38px; left: 0; right: 0;
+    z-index: 200;
+  }
+
+  .logo { font-size: 20px; font-weight: 800; color: #111; font-family:'Inter',sans-serif; }
+
+  .timer-box {
+    background: transparent;
+    border: 1.5px solid #999;
+    border-radius: 999px;
+    padding: 5px 22px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    color: #222;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .header-right { display:flex; align-items:center; gap:2px; }
+
+  .hbtn {
+    display:flex; align-items:center; gap:5px;
+    background:none; border:none; cursor:pointer;
+    font-size:13px; color:#333; font-family:'Inter',sans-serif;
+    padding:5px 10px; border-radius:5px; transition:background 0.15s;
+  }
+  .hbtn:hover { background:rgba(0,0,0,0.06); }
+  .hbtn svg { width:15px; height:15px; stroke:#444; fill:none; stroke-width:2; }
+  .menu-icon { background:none; border:none; cursor:pointer; font-size:18px; color:#333; padding:5px 8px; }
+
+  /* ══════════════════════════════
+     MAIN LAYOUT
+  ══════════════════════════════ */
+  .main {
+    display: flex;
+    height: 100vh;
+    padding-top: 90px; /* navbar 38 + header 52 */
+    position: relative;
+  }
+
+  /* Card */
+  .card {
+    flex: 1;
+    margin: 20px 58px 70px 20px;
+    background: var(--card-bg);
+    border-radius: 4px;
+    border: 1px solid #d4cfc3;
+    display: flex;
+    overflow: hidden;
+  }
+
+  .left-panel {
+    width: 40%;
+    padding: 32px 30px;
+    border-right: 1px solid #d4cfc3;
+    overflow-y: auto;
+  }
+
+  .instruction { font-size:13px; font-weight:700; margin-bottom:14px; color:#111; }
+  .question-text { font-size: 16px; line-height:1.75; color:#222; }
+
+  .right-panel { flex:1; padding:32px 30px; overflow-y:auto; }
+  .options-label { font-size:13px; font-weight:700; margin-bottom:14px; color:#111; }
+
+  .options-list { display:flex; flex-direction:column; gap:10px; }
+
+  .option-item {
+    background: #f5f2ec;
+    height: 55px;
+    border: 1.5px solid #ccc9be;
+    border-radius: 5px;
+    padding: 14px 18px;
+    font-size: 13.5px;
+    color: #222;
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08)
+  }
+  .option-item:hover { background:#eae6dc; border-color:#aaa; }
+  .option-item.selected { background:#deecc8; border-color:#3d6b1e; color:#1a3a0a; font-weight:500; }
+
+  /* ══════════════════════════════
+     SUBMIT BUTTON — pill shape
+  ══════════════════════════════ */
+  .submit-wrap {
+    position: fixed;
+    bottom: 24px;
+    right: 60px;
+    z-index: 200;
+  }
+  .submit-btn {
+    background: var(--green-mid);
+    color: #fff;
+    border: none;
+    border-radius: 999px;          /* full pill */
+    padding: 12px 20px;
+    font-size: 11.5px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+  .submit-btn:hover { background: var(--green-mid); }
+
+  /* ══════════════════════════════
+     SIDEBAR — connected dots
+  ══════════════════════════════ */
+  .sidebar {
+    position: fixed;
+    right: 10px;
+    top: 90px;
+    bottom: 0;
+    width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+  }
+
+  .sidebar-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; /* THIS is the key */
+    height: 80vh;
+    position: relative;
+    padding: 14px 0;
+  }
+
+  /* vertical connecting line */
+  .sidebar-track::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 14px;
+    bottom: 14px;
+    width: 2px;
+    background: #3a3d4a;
+    z-index: 0;
+  }
+
+  .q-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 1000;
+    cursor: pointer;
+    transition: transform 0.15s;
+    user-select: none;
+    position: relative;
+    z-index: 1;
+    margin: 3px 0;
+    flex-shrink: 0;
+  }
+
+  /* unvisited → dark charcoal */
+  .q-dot.unvisited {
+    background: var(--dot-unvisited);
+    color: #ccc;
+    border: 2px solid var(--dot-unvisited);
+  }
+
+  /* active (current) → white bg, dark green border */
+  .q-dot.active {
+    background: #fff;
+    color: var(--green-dark);
+    border: 2.5px solid var(--green-dark);
+  }
+
+  /* answered → dark forest green */
+  .q-dot.answered {
+    background: var(--green-mid);
+    color: #fff;
+    border: 2px solid var(--green-dark);
+  }
+
+  /* visited but unanswered */
+  .q-dot.visited {
+    background: #4a4d5a;
+    color: #ddd;
+    border: 2px solid #4a4d5a;
+  }
+
+  .q-dot:hover { transform: scale(1.12); }
+
+  /* ══════════════════════════════
+     FULLSCREEN GATE
+  ══════════════════════════════ */
+  #fs-prompt {
+    display:none; position:fixed; inset:0;
+    background:rgba(20,40,8,0.97); z-index:9999;
+    align-items:center; justify-content:center;
+    flex-direction:column; gap:16px; color:#fff;
+    font-family:'Inter',sans-serif;
+  }
+  #fs-prompt.show { display:flex; }
+  #fs-prompt h2 { font-size:20px; font-weight:700; }
+  #fs-prompt p  { font-size:13.5px; opacity:0.8; }
+  #fs-btn {
+    margin-top:8px; background:#fff; color:var(--green-dark);
+    border:none; border-radius:999px; padding:11px 30px;
+    font-size:14px; font-weight:700; cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  #fs-btn:hover { background:#deecc8; }
+</style>
+</head>
+<body>
+
+<div id="fs-prompt" class="show">
+  <h2>SHL Assessment</h2>
+  <p>This assessment is designed for fullscreen mode.</p>
+  <button id="fs-btn" onclick="enterFS()">Enter Fullscreen &amp; Begin</button>
+</div>
+
+<!-- ① Browser navbar -->
+<div class="browser-nav">
+  <div class="nav-arrows">
+    <button class="nav-icon">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="nav-icon">
+      <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="nav-icon">
+      <!-- X / stop -->
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <button class="nav-icon">
+      <!-- refresh -->
+      <svg viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
+  </div>
+  <button class="nav-info-btn">ⓘ</button>
+  <button class="nav-translate-btn">A|Z</button>
+</div>
+
+<!-- ② SHL header -->
+<div class="header">
+  <div class="logo">SHL.</div>
+  <div class="timer-box" id="timer">20:00</div>
+  <div class="header-right">
+    <button class="hbtn" onclick="toggleFS()">
+      <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+    </button>
+    <button class="hbtn">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+      Help
+    </button>
+    <button class="hbtn">
+      <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"/></svg>
+      Exit
+    </button>
+    <button class="menu-icon">☰</button>
+  </div>
+</div>
+
+<!-- ③ Main -->
+<div class="main">
+  <div class="card">
+    <div class="left-panel">
+      <div class="instruction">Choose the correct option.</div>
+      <div class="question-text" id="question-text"></div>
+    </div>
+    <div class="right-panel">
+      <div class="options-label">Options</div>
+      <div class="options-list" id="options-list"></div>
+    </div>
+  </div>
+
+  <!-- ④ Pill submit button -->
+  <div class="submit-wrap">
+    <button class="submit-btn" onclick="submitAnswer()">SUBMIT ANSWER</button>
+  </div>
+
+  <!-- ⑤ Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-track" id="sidebar-track"></div>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { text:"Which of the given health issues is a symptom of COVID-19?", options:["Skin allergy","Hair loss","Weak bones","Shortness of breath combined with cough and fever"], answer:3 },
+  { text:"A train travels 120 km in 2 hours. At the same speed, how far will it travel in 5 hours?", options:["240 km","300 km","360 km","180 km"], answer:1 },
+  { text:"If all Bloops are Razzles, and all Razzles are Lazzles, which statement must be true?", options:["All Lazzles are Bloops","All Bloops are Lazzles","Some Razzles are not Lazzles","No Lazzles are Bloops"], answer:1 },
+  { text:"A manager has 5 projects to complete. She finishes 2 on Monday and 1 on Tuesday. What fraction of projects remains?", options:["1/5","2/5","3/5","4/5"], answer:1 },
+  { text:"Which word is the odd one out: Oak, Maple, Rose, Birch, Pine?", options:["Oak","Maple","Rose","Birch"], answer:2 },
+  { text:"A company's revenue grew from $400,000 to $500,000 in one year. What is the percentage increase?", options:["15%","20%","25%","30%"], answer:2 },
+  { text:"If today is Wednesday, what day will it be 100 days from now?", options:["Monday","Tuesday","Friday","Thursday"], answer:3 },
+  { text:"Which number comes next in the sequence: 2, 6, 12, 20, 30, ?", options:["38","40","42","44"], answer:2 },
+  { text:"An office buys 8 pens at $3 each and 5 notebooks at $4 each. What is the total cost?", options:["$40","$44","$48","$52"], answer:2 },
+  { text:"If PENCIL is coded as RGPEKN, how would ERASER be coded?", options:["GTCUGT","GVDUGV","GTCUGV","GVCUGT"], answer:0 },
+  { text:"Which of the following is NOT a primary colour of light?", options:["Red","Green","Yellow","Blue"], answer:2 },
+  { text:"A car depreciates in value by 15% each year. If it is worth $20,000 today, what will it be worth after 2 years?", options:["$14,450","$14,500","$15,000","$16,200"], answer:0 },
+  { text:"Three friends split a restaurant bill of $96 equally. One friend uses a $10 coupon. How much does each person pay after the coupon is applied?", options:["$28.67","$29.00","$30.00","$32.00"], answer:0 }
+];
+
+let cur = 0;
+let selected = new Array(questions.length).fill(null);
+let visited  = new Array(questions.length).fill(false);
+visited[0] = true;
+
+function buildSidebar() {
+  const track = document.getElementById('sidebar-track');
+  track.innerHTML = '';
+  for (let i = 0; i < questions.length; i++) {
+    const dot = document.createElement('div');
+    let cls = 'q-dot ';
+    if (i === cur)              cls += 'active';
+    else if (selected[i]!==null) cls += 'answered';
+    else if (visited[i])         cls += 'visited';
+    else                         cls += 'unvisited';
+    dot.className = cls;
+    dot.textContent = i + 1;
+    dot.onclick = () => goTo(i);
+    track.appendChild(dot);
+  }
+}
+
+function render() {
+  document.getElementById('question-text').textContent = questions[cur].text;
+  const ol = document.getElementById('options-list');
+  ol.innerHTML = '';
+  questions[cur].options.forEach((opt, idx) => {
+    const div = document.createElement('div');
+    div.className = 'option-item' + (selected[cur]===idx ? ' selected' : '');
+    div.textContent = opt;
+    div.onclick = () => { selected[cur]=idx; render(); };
+    ol.appendChild(div);
+  });
+  buildSidebar();
+}
+
+function goTo(i) { cur=i; visited[i]=true; render(); }
+
+function submitAnswer() {
+  visited[cur]=true;
+  cur = cur < questions.length-1 ? cur+1 : 0;
+  visited[cur]=true;
+  render();
+}
+
+// Timer
+let secs = 20*60;
+setInterval(()=>{
+  secs--; if(secs<0) secs=20*60;
+  const m=String(Math.floor(secs/60)).padStart(2,'0');
+  const s=String(secs%60).padStart(2,'0');
+  document.getElementById('timer').textContent=m+':'+s;
+},1000);
+
+// Fullscreen
+function enterFS(){
+  const el=document.documentElement;
+  (el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen).call(el);
+  document.getElementById('fs-prompt').classList.remove('show');
+}
+function toggleFS(){
+  if(!document.fullscreenElement) enterFS();
+  else document.exitFullscreen&&document.exitFullscreen();
+}
+document.addEventListener('fullscreenchange',()=>{
+  document.getElementById('fs-prompt').classList.toggle('show',!document.fullscreenElement);
+});
+
+render();
+</script>
+</body>
+</html>
